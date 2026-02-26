@@ -1,0 +1,53 @@
+NON-DISCLOSURE AGREEMENT
+
+This Non-Disclosure Agreement ("Agreement") is entered into as of January 15, 2024 ("Effective Date") by and between:
+
+Acme Technologies Inc., a Delaware corporation with its principal place of business at 100 Silicon Valley Blvd, San Jose, CA 95101 ("Disclosing Party")
+
+and
+
+Beta Solutions LLC, a New York limited liability company with its principal place of business at 200 Park Avenue, New York, NY 10001 ("Receiving Party").
+
+1. PURPOSE
+The Disclosing Party desires to disclose certain confidential and proprietary information to the Receiving Party for the purpose of evaluating a potential business partnership in the field of enterprise software integration ("Purpose").
+
+2. CONFIDENTIAL INFORMATION
+"Confidential Information" means any and all information disclosed by the Disclosing Party to the Receiving Party, either directly or indirectly, in writing, orally or by inspection of tangible objects, including without limitation technical data, trade secrets, know-how, research, product plans, products, services, customers, customer lists, markets, software, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing, finances, or other business information.
+
+3. OBLIGATIONS
+The Receiving Party agrees to: (a) hold the Confidential Information in strict confidence; (b) not to disclose the Confidential Information to third parties without prior written consent of the Disclosing Party; (c) not to use the Confidential Information for any purpose other than the Purpose.
+
+4. TERM AND TERMINATION
+This Agreement shall commence on the Effective Date and shall remain in effect for a period of three (3) years, unless earlier terminated. Either party may terminate this Agreement upon thirty (30) days written notice to the other party. Upon termination, the Receiving Party shall promptly return or destroy all Confidential Information.
+
+5. AUTOMATIC RENEWAL
+This Agreement shall automatically renew for successive one (1) year periods unless either party provides written notice of non-renewal no less than sixty (60) days prior to the end of the then-current term. IMPORTANT: Failure to provide timely notice will result in automatic binding renewal.
+
+6. INTELLECTUAL PROPERTY
+All Confidential Information disclosed hereunder, and all intellectual property rights therein, shall remain the exclusive property of the Disclosing Party. The Receiving Party acknowledges that no license or rights in or to any Confidential Information are granted hereunder. Any improvements, modifications, or derivative works created by the Receiving Party based on the Confidential Information shall be deemed work-for-hire and shall be owned exclusively by the Disclosing Party.
+
+7. INDEMNIFICATION
+The Receiving Party agrees to indemnify, defend, and hold harmless the Disclosing Party and its officers, directors, employees, agents, and successors from and against any and all claims, damages, losses, costs, and expenses (including reasonable attorney's fees) arising out of or relating to the Receiving Party's breach of this Agreement. This indemnification obligation shall survive termination of this Agreement indefinitely.
+
+8. LIMITATION OF LIABILITY
+NOTWITHSTANDING ANYTHING TO THE CONTRARY IN THIS AGREEMENT, IN NO EVENT SHALL THE DISCLOSING PARTY BE LIABLE FOR ANY INDIRECT, SPECIAL, INCIDENTAL, PUNITIVE, OR CONSEQUENTIAL DAMAGES. The Disclosing Party's total liability under this Agreement shall not exceed $500.
+
+9. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of law principles. Any dispute shall be resolved through binding arbitration in Delaware.
+
+10. ENTIRE AGREEMENT
+This Agreement constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior agreements, understandings, negotiations, and discussions, whether oral or written.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.
+
+ACME TECHNOLOGIES INC.
+By: ________________________
+Name: Sarah Johnson
+Title: Chief Executive Officer
+Date: January 15, 2024
+
+BETA SOLUTIONS LLC
+By: ________________________
+Name: Michael Chen
+Title: Managing Director
+Date: January 15, 2024

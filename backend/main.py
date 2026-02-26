@@ -1,6 +1,6 @@
 """
-Contract & Document Review Bot — Backend
-FastAPI + Claude API (claude-sonnet-4-6)
+Contract & Document Review Bot — Vercel Compatible
+FastAPI + Claude API with embedded HTML
 """
 
 import os
@@ -9,8 +9,7 @@ import re
 import tempfile
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 import anthropic
 
 try:
@@ -20,87 +19,42 @@ except ImportError:
     PDF_SUPPORT = False
 
 app = FastAPI(title="Contract Review Bot")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+HTML_CONTENT = open(os.path.join(os.path.dirname(__file__), "../frontend/index.html")).read() if os.path.exists(os.path.join(os.path.dirname(__file__), "../frontend/index.html")) else """<!DOCTYPE html><html><body><h1>Loading...</h1></body></html>"""
 
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+SYSTEM_PROMPT = """You are an expert contract lawyer. Respond with valid JSON only. No markdown, no code blocks, no extra text."""
 
-@app.get("/")
+ANALYSIS_PROMPT = """Analyze this contract. Return ONLY this JSON structure, nothing else:
+{
+  "summary": "plain English summary",
+  "parties": [{"name": "name", "role": "role"}],
+  "key_dates": [{"label": "label", "value": "value"}],
+  "payment_terms": {"amount": "amount", "schedule": "schedule", "penalties": "penalties"},
+  "termination_clauses": [{"type": "type", "description": "desc", "notice_required": "notice"}],
+  "renewal_terms": {"auto_renews": false, "renewal_period": "period", "opt_out_deadline": "deadline"},
+  "risk_flags": [{"category": "category", "severity": "high", "title": "title", "description": "desc", "clause_reference": "quote"}],
+  "overall_risk_level": "high",
+  "recommendations": ["rec1", "rec2"]
+}
+
+CONTRACT:
+"""
+
+def get_html():
+    html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../frontend/index.html")
+    if os.path.exists(html_path):
+        with open(html_path) as f:
+            return f.read()
+    return "<h1>Frontend not found</h1>"
+
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return FileResponse("../frontend/index.html")
+    return HTMLResponse(content=get_html())
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "pdf_support": PDF_SUPPORT}
-
-
-def extract_text_from_pdf(file_bytes: bytes) -> str:
-    if not PDF_SUPPORT:
-        raise HTTPException(status_code=400, detail="PDF support not installed.")
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        tmp.write(file_bytes)
-        tmp_path = tmp.name
-    doc = fitz.open(tmp_path)
-    text = "\n".join(page.get_text() for page in doc)
-    doc.close()
-    os.unlink(tmp_path)
-    return text.strip()
-
-
-SYSTEM_PROMPT = """You are an expert contract lawyer and legal analyst.
-You MUST respond with valid JSON only.
-Do NOT include any text before or after the JSON.
-Do NOT use markdown code blocks.
-Do NOT write ```json or ``` anywhere.
-Just output the raw JSON object and nothing else."""
-
-ANALYSIS_PROMPT = """Analyze this contract and return ONLY a JSON object with EXACTLY this structure. No other text:
-
-{
-  "summary": "1-2 paragraph plain-English summary",
-  "parties": [
-    { "name": "party name", "role": "their role" }
-  ],
-  "key_dates": [
-    { "label": "date label", "value": "date value" }
-  ],
-  "payment_terms": {
-    "amount": "payment amount or N/A",
-    "schedule": "payment schedule or N/A",
-    "penalties": "late penalties or N/A"
-  },
-  "termination_clauses": [
-    { "type": "termination type", "description": "description", "notice_required": "notice period" }
-  ],
-  "renewal_terms": {
-    "auto_renews": false,
-    "renewal_period": "period or N/A",
-    "opt_out_deadline": "deadline or N/A"
-  },
-  "risk_flags": [
-    {
-      "category": "auto_renewal",
-      "severity": "high",
-      "title": "risk title",
-      "description": "plain English explanation",
-      "clause_reference": "relevant quote from contract"
-    }
-  ],
-  "overall_risk_level": "high",
-  "recommendations": [
-    "recommendation 1",
-    "recommendation 2"
-  ]
-}
-
-CONTRACT TEXT:
-""" + "{contract_text}"
-
+    return {"status": "ok"}
 
 @app.post("/analyze")
 async def analyze_contract(
@@ -112,7 +66,15 @@ async def analyze_contract(
     if file and file.filename:
         raw = await file.read()
         if file.filename.lower().endswith(".pdf"):
-            contract_text = extract_text_from_pdf(raw)
+            if not PDF_SUPPORT:
+                raise HTTPException(status_code=400, detail="PDF not supported on this server. Please paste text instead.")
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp.write(raw)
+                tmp_path = tmp.name
+            doc = fitz.open(tmp_path)
+            contract_text = "\n".join(page.get_text() for page in doc)
+            doc.close()
+            os.unlink(tmp_path)
         else:
             contract_text = raw.decode("utf-8", errors="replace")
     elif text and text.strip():
@@ -121,49 +83,34 @@ async def analyze_contract(
         raise HTTPException(status_code=400, detail="No contract provided.")
 
     if len(contract_text) < 50:
-        raise HTTPException(status_code=400, detail="Contract text is too short.")
+        raise HTTPException(status_code=400, detail="Contract text too short.")
 
     contract_text = contract_text[:100_000]
-
     client = anthropic.Anthropic(api_key=api_key)
+
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=4096,
             system=SYSTEM_PROMPT,
-            messages=[
-                {
-                    "role": "user",
-                    "content": ANALYSIS_PROMPT.replace("{contract_text}", contract_text),
-                }
-            ],
+            messages=[{"role": "user", "content": ANALYSIS_PROMPT + contract_text}],
         )
     except anthropic.AuthenticationError:
         raise HTTPException(status_code=401, detail="Invalid API key.")
     except anthropic.RateLimitError:
-        raise HTTPException(status_code=429, detail="Rate limit hit. Please wait and retry.")
+        raise HTTPException(status_code=429, detail="Rate limit hit. Please wait.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Claude API error: {str(e)}")
 
-    raw_response = message.content[0].text.strip()
-
-    # Remove markdown fences if present
-    raw_response = re.sub(r"^```json\s*", "", raw_response)
-    raw_response = re.sub(r"^```\s*", "", raw_response)
-    raw_response = re.sub(r"\s*```$", "", raw_response)
-    raw_response = raw_response.strip()
-
-    # Extract JSON object if there's extra text
-    match = re.search(r'\{.*\}', raw_response, re.DOTALL)
+    raw = message.content[0].text.strip()
+    raw = re.sub(r"^```json\s*", "", raw)
+    raw = re.sub(r"^```\s*", "", raw)
+    raw = re.sub(r"\s*```$", "", raw).strip()
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
     if match:
-        raw_response = match.group(0)
+        raw = match.group(0)
 
     try:
-        result = json.loads(raw_response)
+        return json.loads(raw)
     except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to parse response as JSON: {str(e)}"
-        )
-
-    return result
+        raise HTTPException(status_code=500, detail=f"Parse error: {str(e)}")
